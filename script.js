@@ -1,296 +1,259 @@
-// Obfuscation Engine
-class LuaObfuscator {
+// Nautica Obfuscator Core
+class NauticaObfuscator {
     constructor() {
         this.level = 'medium';
-        this.settings = {
-            renameVars: true,
-            renameFuncs: true,
-            stringEncode: true,
-            numberEncode: true,
-            removeComments: true,
-            removeWhitespace: true,
-            addDeadCode: true,
-            controlFlow: true,
-            varLength: 4,
-            antiDecompile: false,
-            watermark: false
+        this.apiKeyValid = false;
+        this.apiKey = null;
+        this.nauticaId = 'nautica-' + Math.random().toString(36).substr(2, 8) + '-' + Math.random().toString(36).substr(2, 4);
+    }
+
+    // Generate hidden link
+    generateHiddenLink() {
+        const randomId = 'nautica-' + Math.random().toString(36).substr(2, 8) + '-' + 
+                        Math.random().toString(36).substr(2, 4) + '-' + 
+                        Math.random().toString(36).substr(2, 4);
+        
+        const timestamp = Date.now();
+        const signature = this.generateSignature(randomId, timestamp);
+        
+        return {
+            id: randomId,
+            timestamp: timestamp,
+            signature: signature,
+            embedCode: `--[[ NAUTICA_HIDDEN_LINK:${randomId} ]]\n--[[ TIMESTAMP:${timestamp} ]]\n--[[ SIGNATURE:${signature} ]]\nlocal _0x${Math.random().toString(36).substr(2, 8)} = 'https://api.nautica.obfuscator/verify?key=${randomId}&t=${timestamp}&s=${signature}'\n--[[ VERIFIED:${randomId} ]]--`
         };
     }
-    
-    obfuscate(code) {
-        let result = code;
-        
-        // Remove comments
-        if (this.settings.removeComments) {
-            result = result.replace(/--.*$/gm, '');
-            result = result.replace(/\/\*[\s\S]*?\*\//g, '');
+
+    generateSignature(id, timestamp) {
+        let hash = 0;
+        const str = id + timestamp + this.nauticaId;
+        for (let i = 0; i < str.length; i++) {
+            hash = ((hash << 5) - hash) + str.charCodeAt(i);
+            hash |= 0;
         }
-        
-        // Token generation
-        const varNames = this.generateVarNames(100);
-        const funcNames = this.generateVarNames(50);
-        
-        // Find and rename variables
-        if (this.settings.renameVars) {
-            const varPattern = /\b(local\s+)?([a-zA-Z_][a-zA-Z0-9_]*)\b/g;
-            let varCounter = 0;
-            const varMap = new Map();
-            
-            result = result.replace(varPattern, (match, local, varName) => {
-                if (this.isReservedWord(varName)) return match;
-                if (varMap.has(varName)) {
-                    return (local || '') + varMap.get(varName);
-                }
-                const newName = varNames[varCounter++ % varNames.length];
-                varMap.set(varName, newName);
-                return (local || '') + newName;
-            });
-        }
-        
-        // Encode strings
-        if (this.settings.stringEncode) {
-            result = result.replace(/"([^"]*)"/g, (match, str) => {
-                return this.encodeString(str);
-            });
-            result = result.replace(/'([^']*)'/g, (match, str) => {
-                return this.encodeString(str);
-            });
-        }
-        
-        // Encode numbers
-        if (this.settings.numberEncode) {
-            result = result.replace(/\b(\d+)\b/g, (match, num) => {
-                if (num.length > 3) return match;
-                return this.encodeNumber(parseInt(num));
-            });
-        }
-        
-        // Add dead code
-        if (this.settings.addDeadCode && this.level !== 'light') {
-            result = this.insertDeadCode(result);
-        }
-        
-        // Control flow obfuscation
-        if (this.settings.controlFlow && this.level === 'extreme') {
-            result = this.obfuscateControlFlow(result);
-        }
-        
-        // Anti-decompile header
-        if (this.settings.antiDecompile) {
-            result = this.addAntiDecompile(result);
-        }
-        
-        // Watermark
-        if (this.settings.watermark) {
-            result = `-- Obfuscated by BLACKGPT Lua Obfuscator v4.2.0\n-- Protected script\n${result}`;
-        }
-        
-        // Remove whitespace (optional)
-        if (this.settings.removeWhitespace && this.level !== 'light') {
-            result = result.replace(/\s+/g, ' ');
-            result = result.replace(/;\s*;/g, ';');
-        }
-        
-        return result;
+        return Math.abs(hash).toString(36);
     }
-    
-    generateVarNames(count) {
-        const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_';
-        const names = [];
-        const length = this.settings.varLength;
-        
-        for (let i = 0; i < count; i++) {
-            let name = '';
-            for (let j = 0; j < length; j++) {
-                name += chars[Math.floor(Math.random() * chars.length)];
-            }
-            names.push(name);
-        }
-        return names;
-    }
-    
+
+    // Obfuscate string
     encodeString(str) {
-        const methods = ['char', 'hex', 'base64'];
+        const methods = ['char', 'hex', 'mixed'];
         const method = methods[Math.floor(Math.random() * methods.length)];
         
-        switch(method) {
-            case 'char':
-                const chars = [];
-                for (let i = 0; i < str.length; i++) {
-                    chars.push(str.charCodeAt(i));
-                }
-                return `string.char(${chars.join(',')})`;
-            case 'hex':
-                let hex = '';
-                for (let i = 0; i < str.length; i++) {
-                    hex += str.charCodeAt(i).toString(16);
-                }
-                return `(function() local t={${hex.split('').join(',')}} local r='' for i=1,#t,2 do r=r..string.char(tonumber(table.concat({t[i],t[i+1]}),16)) end return r end)()`;
-            default:
-                const b64 = btoa(str);
-                return `(function() return (function(s) return (s:gsub('..', function(c) return string.char(tonumber(c, 16)) end)) end)('${this.toHex(b64)}') end)()`;
+        if (method === 'char') {
+            const chars = [];
+            for (let i = 0; i < str.length; i++) {
+                chars.push(str.charCodeAt(i));
+            }
+            return `string.char(${chars.join(',')})`;
+        } else if (method === 'hex') {
+            let hex = '';
+            for (let i = 0; i < str.length; i++) {
+                hex += str.charCodeAt(i).toString(16);
+            }
+            return `(function() local t='${hex}' local r='' for i=1,#t,2 do r=r..string.char(tonumber(t:sub(i,i+1),16)) end return r end)()`;
+        } else {
+            const b64 = btoa(str);
+            return `(function() local s='${b64}' return (function(s) return (s:gsub('..', function(c) return string.char(tonumber(c,16)) end)) end)((function(s) local h='' for i=1,#s do h=h..string.byte(s,i):format('%x') end return h end)(s)) end)()`;
         }
     }
-    
+
     encodeNumber(num) {
         const r1 = Math.floor(Math.random() * 100) + 1;
         const r2 = Math.floor(Math.random() * 100) + 1;
         return `(${r1} + ${num - r1})`;
     }
-    
-    insertDeadCode(code) {
-        const deadCode = [
-            'if false then local _ = 1 end',
-            'if nil then local _ = 2 end',
-            'do local _ = 3 end'
-        ];
-        const lines = code.split('\n');
-        for (let i = 0; i < lines.length; i += 10) {
-            lines.splice(i, 0, deadCode[Math.floor(Math.random() * deadCode.length)]);
+
+    generateRandomName(length = 8) {
+        const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_';
+        let name = '';
+        for (let i = 0; i < length; i++) {
+            name += chars[Math.floor(Math.random() * chars.length)];
         }
-        return lines.join('\n');
+        return name;
     }
-    
-    obfuscateControlFlow(code) {
-        return `(function()\n${code}\nend)()`;
-    }
-    
-    addAntiDecompile(code) {
-        return `--[[\nAnti-Decompile Protection Active\n--]]\n${code}\n--[[\nEnd of Protected Script\n--]]`;
-    }
-    
-    isReservedWord(word) {
-        const reserved = ['if', 'then', 'else', 'elseif', 'end', 'for', 'while', 'do', 'return', 'local', 'function', 'nil', 'true', 'false', 'and', 'or', 'not', 'break', 'goto', 'in', 'repeat', 'until'];
+
+    isReserved(word) {
+        const reserved = ['if', 'then', 'else', 'elseif', 'end', 'for', 'while', 'do', 'return', 
+                         'local', 'function', 'nil', 'true', 'false', 'and', 'or', 'not', 'break', 
+                         'goto', 'in', 'repeat', 'until'];
         return reserved.includes(word);
     }
-    
-    toHex(str) {
-        let hex = '';
-        for (let i = 0; i < str.length; i++) {
-            hex += str.charCodeAt(i).toString(16);
+
+    obfuscate(code, level, features) {
+        let result = code;
+        
+        // Remove comments
+        if (features.removeComments) {
+            result = result.replace(/--\[\[[\s\S]*?\]\]--/g, '');
+            result = result.replace(/--.*$/gm, '');
         }
-        return hex;
+        
+        // Rename variables
+        if (features.renameVars) {
+            const varMap = new Map();
+            let counter = 0;
+            
+            result = result.replace(/\b(local\s+)?([a-zA-Z_][a-zA-Z0-9_]*)\b/g, (match, local, varName) => {
+                if (this.isReserved(varName)) return match;
+                if (!varMap.has(varName)) {
+                    varMap.set(varName, this.generateRandomName(features.varLength || 6));
+                }
+                return (local || '') + varMap.get(varName);
+            });
+        }
+        
+        // Encode strings
+        if (features.encodeStrings) {
+            result = result.replace(/"(.*?)"/g, (match, str) => {
+                return this.encodeString(str);
+            });
+            result = result.replace(/'(.*?)'/g, (match, str) => {
+                return this.encodeString(str);
+            });
+        }
+        
+        // Encode numbers
+        if (features.encodeNumbers) {
+            result = result.replace(/\b(\d{1,3})\b/g, (match, num) => {
+                if (num.length <= 3) {
+                    return this.encodeNumber(parseInt(num));
+                }
+                return match;
+            });
+        }
+        
+        // Add dead code
+        if (features.addDeadCode && level !== 'light') {
+            const deadCodeCount = level === 'extreme' ? 30 : level === 'heavy' ? 20 : 10;
+            const deadCodes = [
+                'if false then local _ = 1 end',
+                'do local _ = "dead" end',
+                'while false do break end',
+                'if nil then local _ = 2 end',
+                'do local _ = {} end'
+            ];
+            
+            let lines = result.split('\n');
+            for (let i = 0; i < deadCodeCount; i++) {
+                const pos = Math.floor(Math.random() * lines.length);
+                lines.splice(pos, 0, deadCodes[Math.floor(Math.random() * deadCodes.length)]);
+            }
+            result = lines.join('\n');
+        }
+        
+        // Control flow obfuscation
+        if (features.controlFlow && level === 'extreme') {
+            result = `(function()\n${result}\nend)()`;
+        }
+        
+        // Remove whitespace
+        if (features.removeWhitespace) {
+            result = result.replace(/\s+/g, ' ');
+            result = result.replace(/;\s*;/g, ';');
+        }
+        
+        // Inject hidden link
+        if (features.injectHiddenLink) {
+            const hiddenLink = this.generateHiddenLink();
+            const lines = result.split('\n');
+            const randomLine = Math.floor(Math.random() * lines.length);
+            lines.splice(randomLine, 0, hiddenLink.embedCode);
+            result = lines.join('\n');
+        }
+        
+        // Inject API key check
+        if (features.injectApiKeyCheck && this.apiKey) {
+            const apiCheck = `
+--[[ NAUTICA API KEY VERIFICATION ]]
+local function verifyNauticaKey()
+    local expected = "${this.generateSignature(this.nauticaId, Date.now())}"
+    local provided = "${this.apiKey}"
+    if provided ~= expected then
+        error("Invalid Nautica API Key. Please obtain a valid key from nautica.obfuscator")
+    end
+    return true
+end
+verifyNauticaKey()
+`;
+            result = apiCheck + '\n' + result;
+        }
+        
+        // Add anti-decompile
+        if (features.antiDecompile) {
+            result = `--[[ ANTI-DECOMPILE PROTECTION ACTIVE ]]\n--[[ OBFUSCATED BY NAUTICA v1.0 ]]\n--[[ ID: ${this.nauticaId} ]]\n\n${result}\n--[[ END OF PROTECTED SCRIPT ]]--`;
+        }
+        
+        return result;
     }
-    
+
     calculateStats(code) {
         const lines = code.split('\n').length;
         const chars = code.length;
-        return { lines, chars };
+        const sizeKb = (chars / 1024).toFixed(2);
+        return { lines, chars, sizeKb };
     }
 }
 
 // UI Controller
 class UIController {
     constructor() {
-        this.obfuscator = new LuaObfuscator();
+        this.obfuscator = new NauticaObfuscator();
         this.initElements();
         this.initEvents();
-        this.initTabs();
+        this.initBackground();
+        this.updateStats();
     }
-    
+
     initElements() {
         this.inputArea = document.getElementById('inputScript');
         this.outputArea = document.getElementById('outputScript');
         this.obfuscateBtn = document.getElementById('obfuscateBtn');
-        this.copyBtn = document.getElementById('copyOutput');
-        this.downloadBtn = document.getElementById('downloadOutput');
-        this.clearInputBtn = document.getElementById('clearInput');
-        this.clearOutputBtn = document.getElementById('clearOutput');
-        this.loadExampleBtn = document.getElementById('loadExample');
-        this.uploadBtn = document.getElementById('uploadFile');
-        this.inputStats = document.getElementById('inputStats');
-        this.outputStats = document.getElementById('outputStats');
+        this.clearInputBtn = document.getElementById('clearInputBtn');
+        this.clearOutputBtn = document.getElementById('clearOutputBtn');
+        this.loadExampleBtn = document.getElementById('loadExampleBtn');
+        this.uploadFileBtn = document.getElementById('uploadFileBtn');
+        this.copyOutputBtn = document.getElementById('copyOutputBtn');
+        this.downloadOutputBtn = document.getElementById('downloadOutputBtn');
+        
+        this.lineCount = document.getElementById('lineCount');
+        this.charCount = document.getElementById('charCount');
+        this.sizeKb = document.getElementById('sizeKb');
+        this.outputLineCount = document.getElementById('outputLineCount');
+        this.outputCharCount = document.getElementById('outputCharCount');
         this.compressionRate = document.getElementById('compressionRate');
         
-        // Level buttons
         this.levelBtns = document.querySelectorAll('.level-btn');
         
-        // Checkboxes
         this.renameVars = document.getElementById('renameVars');
-        this.renameFuncs = document.getElementById('renameFuncs');
-        this.stringEncode = document.getElementById('stringEncode');
-        this.numberEncode = document.getElementById('numberEncode');
+        this.encodeStrings = document.getElementById('encodeStrings');
+        this.encodeNumbers = document.getElementById('encodeNumbers');
+        this.addDeadCode = document.getElementById('addDeadCode');
         this.removeComments = document.getElementById('removeComments');
         this.removeWhitespace = document.getElementById('removeWhitespace');
-        this.addDeadCode = document.getElementById('addDeadCode');
         this.controlFlow = document.getElementById('controlFlow');
-        
-        // Settings
-        this.varLength = document.getElementById('varLength');
         this.antiDecompile = document.getElementById('antiDecompile');
-        this.watermark = document.getElementById('watermark');
-        this.fontSize = document.getElementById('fontSize');
-        this.themeSelect = document.getElementById('themeSelect');
-        this.editorTheme = document.getElementById('editorTheme');
+        this.injectHiddenLink = document.getElementById('injectHiddenLink');
+        this.injectApiKeyCheck = document.getElementById('injectApiKeyCheck');
+        
+        this.modal = document.getElementById('apiModal');
+        this.verifyApiBtn = document.getElementById('verifyApiBtn');
+        this.demoKeyBtn = document.getElementById('demoKeyBtn');
+        this.apiKeyInput = document.getElementById('apiKeyInput');
+        
+        this.loadingOverlay = document.getElementById('loadingOverlay');
+        this.toast = document.getElementById('toast');
+        this.toastMessage = document.getElementById('toastMessage');
     }
-    
+
     initEvents() {
-        // Obfuscate
-        this.obfuscateBtn.addEventListener('click', () => this.obfuscate());
+        this.obfuscateBtn.addEventListener('click', () => this.checkApiAndObfuscate());
+        this.clearInputBtn.addEventListener('click', () => this.clearInput());
+        this.clearOutputBtn.addEventListener('click', () => this.clearOutput());
+        this.loadExampleBtn.addEventListener('click', () => this.loadExample());
+        this.uploadFileBtn.addEventListener('click', () => this.uploadFile());
+        this.copyOutputBtn.addEventListener('click', () => this.copyOutput());
+        this.downloadOutputBtn.addEventListener('click', () => this.downloadOutput());
         
-        // Copy output
-        this.copyBtn.addEventListener('click', () => {
-            this.outputArea.select();
-            document.execCommand('copy');
-            this.showNotification('Copied to clipboard!');
-        });
-        
-        // Download output
-        this.downloadBtn.addEventListener('click', () => {
-            const blob = new Blob([this.outputArea.value], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `obfuscated_${Date.now()}.lua`;
-            a.click();
-            URL.revokeObjectURL(url);
-        });
-        
-        // Clear input
-        this.clearInputBtn.addEventListener('click', () => {
-            this.inputArea.value = '';
-            this.updateStats();
-        });
-        
-        // Clear output
-        this.clearOutputBtn.addEventListener('click', () => {
-            this.outputArea.value = '';
-            this.updateOutputStats();
-        });
-        
-        // Load example
-        this.loadExampleBtn.addEventListener('click', () => {
-            this.inputArea.value = `-- Example Roblox Script
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local Mouse = LocalPlayer:GetMouse()
-
-print("Script loaded successfully!")
-
-Mouse.Button1Down:Connect(function()
-    print("Mouse clicked!")
-end)`;
-            this.updateStats();
-        });
-        
-        // Upload file
-        this.uploadBtn.addEventListener('click', () => {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.lua,.txt';
-            input.onchange = (e) => {
-                const file = e.target.files[0];
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    this.inputArea.value = e.target.result;
-                    this.updateStats();
-                };
-                reader.readAsText(file);
-            };
-            input.click();
-        });
-        
-        // Level buttons
         this.levelBtns.forEach(btn => {
             btn.addEventListener('click', () => {
                 this.levelBtns.forEach(b => b.classList.remove('active'));
@@ -299,228 +262,221 @@ end)`;
             });
         });
         
-        // Checkbox sync
-        const checkboxes = [this.renameVars, this.renameFuncs, this.stringEncode, 
-                           this.numberEncode, this.removeComments, this.removeWhitespace, 
-                           this.addDeadCode, this.controlFlow];
+        this.verifyApiBtn.addEventListener('click', () => this.verifyApiKey());
+        this.demoKeyBtn.addEventListener('click', () => this.generateDemoKey());
         
-        checkboxes.forEach(cb => {
-            if (cb) cb.addEventListener('change', () => this.syncSettings());
-        });
-        
-        // Settings
-        if (this.varLength) {
-            this.varLength.addEventListener('input', (e) => {
-                document.getElementById('varLengthValue').textContent = e.target.value + ' chars';
-                this.syncSettings();
-            });
-        }
-        
-        if (this.antiDecompile) this.antiDecompile.addEventListener('change', () => this.syncSettings());
-        if (this.watermark) this.watermark.addEventListener('change', () => this.syncSettings());
-        
-        // Font size
-        if (this.fontSize) {
-            this.fontSize.addEventListener('input', (e) => {
-                const size = e.target.value;
-                document.getElementById('fontSizeValue').textContent = size + 'px';
-                document.querySelectorAll('textarea').forEach(ta => {
-                    ta.style.fontSize = size + 'px';
-                });
-            });
-        }
-        
-        // Theme
-        if (this.themeSelect) {
-            this.themeSelect.addEventListener('change', (e) => {
-                this.applyTheme(e.target.value);
-            });
-        }
-        
-        // Input stats update
         this.inputArea.addEventListener('input', () => this.updateStats());
-        
-        // Presets
-        document.querySelectorAll('.preset-btn').forEach(btn => {
-            btn.addEventListener('click', () => this.applyPreset(btn.dataset.preset));
-        });
-        
-        this.updateStats();
     }
-    
-    syncSettings() {
-        this.obfuscator.settings.renameVars = this.renameVars?.checked || false;
-        this.obfuscator.settings.renameFuncs = this.renameFuncs?.checked || false;
-        this.obfuscator.settings.stringEncode = this.stringEncode?.checked || false;
-        this.obfuscator.settings.numberEncode = this.numberEncode?.checked || false;
-        this.obfuscator.settings.removeComments = this.removeComments?.checked || false;
-        this.obfuscator.settings.removeWhitespace = this.removeWhitespace?.checked || false;
-        this.obfuscator.settings.addDeadCode = this.addDeadCode?.checked || false;
-        this.obfuscator.settings.controlFlow = this.controlFlow?.checked || false;
-        this.obfuscator.settings.varLength = parseInt(this.varLength?.value) || 4;
-        this.obfuscator.settings.antiDecompile = this.antiDecompile?.checked || false;
-        this.obfuscator.settings.watermark = this.watermark?.checked || false;
-    }
-    
-    applyPreset(preset) {
-        switch(preset) {
-            case 'speed':
-                this.renameVars.checked = true;
-                this.stringEncode.checked = false;
-                this.controlFlow.checked = false;
-                this.addDeadCode.checked = false;
-                this.removeWhitespace.checked = true;
-                break;
-            case 'security':
-                this.renameVars.checked = true;
-                this.stringEncode.checked = true;
-                this.controlFlow.checked = true;
-                this.addDeadCode.checked = true;
-                this.antiDecompile.checked = true;
-                break;
-            case 'size':
-                this.renameVars.checked = true;
-                this.removeWhitespace.checked = true;
-                this.stringEncode.checked = false;
-                this.addDeadCode.checked = false;
-                break;
-            case 'balance':
-                this.renameVars.checked = true;
-                this.stringEncode.checked = true;
-                this.controlFlow.checked = false;
-                this.addDeadCode.checked = true;
-                break;
-        }
-        this.syncSettings();
-        this.showNotification(`Preset "${preset}" applied!`);
-    }
-    
-    applyTheme(theme) {
-        const root = document.documentElement;
-        switch(theme) {
-            case 'darker':
-                root.style.setProperty('--bg-primary', '#050508');
-                root.style.setProperty('--bg-secondary', '#0a0a0f');
-                root.style.setProperty('--bg-tertiary', '#0f0f15');
-                break;
-            case 'midnight':
-                root.style.setProperty('--bg-primary', '#0a0e27');
-                root.style.setProperty('--bg-secondary', '#0f1433');
-                root.style.setProperty('--bg-tertiary', '#141a40');
-                root.style.setProperty('--accent', '#3b82f6');
-                break;
-            case 'matrix':
-                root.style.setProperty('--bg-primary', '#001100');
-                root.style.setProperty('--bg-secondary', '#002200');
-                root.style.setProperty('--bg-tertiary', '#003300');
-                root.style.setProperty('--accent', '#00ff00');
-                root.style.setProperty('--text-primary', '#00ff00');
-                break;
-            default:
-                root.style.setProperty('--bg-primary', '#0a0a0f');
-                root.style.setProperty('--bg-secondary', '#0f0f15');
-                root.style.setProperty('--bg-tertiary', '#15151f');
-                root.style.setProperty('--accent', '#8b5cf6');
+
+    initBackground() {
+        const particlesContainer = document.getElementById('particles');
+        for (let i = 0; i < 80; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            const size = Math.random() * 80 + 20;
+            particle.style.width = size + 'px';
+            particle.style.height = size + 'px';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 20 + 's';
+            particle.style.animationDuration = Math.random() * 10 + 15 + 's';
+            particle.style.opacity = Math.random() * 0.3;
+            particlesContainer.appendChild(particle);
         }
     }
-    
+
+    checkApiAndObfuscate() {
+        if (!this.obfuscator.apiKeyValid) {
+            this.modal.classList.add('active');
+        } else {
+            this.obfuscate();
+        }
+    }
+
+    verifyApiKey() {
+        const key = this.apiKeyInput.value;
+        if (key.startsWith('NAUTICA-') && key.length >= 20) {
+            this.obfuscator.apiKeyValid = true;
+            this.obfuscator.apiKey = key;
+            this.modal.classList.remove('active');
+            this.showToast('API Key verified successfully!', 'success');
+            this.obfuscate();
+        } else {
+            this.showToast('Invalid API key format!', 'error');
+            this.apiKeyInput.style.borderColor = '#ff00ff';
+            setTimeout(() => {
+                this.apiKeyInput.style.borderColor = 'rgba(0, 255, 255, 0.2)';
+            }, 2000);
+        }
+    }
+
+    generateDemoKey() {
+        const demoKey = 'NAUTICA-DEMO-' + Math.random().toString(36).substr(2, 8).toUpperCase() + 
+                       '-' + Math.random().toString(36).substr(2, 4).toUpperCase();
+        this.apiKeyInput.value = demoKey;
+        this.showToast('Demo key generated! Click Verify to continue.', 'info');
+    }
+
     obfuscate() {
         const input = this.inputArea.value;
         if (!input.trim()) {
-            this.showNotification('Please enter some code first!', 'error');
+            this.showToast('Please enter some code first!', 'error');
             return;
         }
         
-        this.syncSettings();
+        this.showLoading(true);
         
-        try {
-            const output = this.obfuscator.obfuscate(input);
-            this.outputArea.value = output;
-            this.updateOutputStats(input, output);
-            this.showNotification('Obfuscation completed!', 'success');
-        } catch(e) {
-            console.error(e);
-            this.showNotification('Obfuscation failed!', 'error');
-        }
+        setTimeout(() => {
+            try {
+                const features = {
+                    renameVars: this.renameVars.checked,
+                    encodeStrings: this.encodeStrings.checked,
+                    encodeNumbers: this.encodeNumbers.checked,
+                    addDeadCode: this.addDeadCode.checked,
+                    removeComments: this.removeComments.checked,
+                    removeWhitespace: this.removeWhitespace.checked,
+                    controlFlow: this.controlFlow.checked,
+                    antiDecompile: this.antiDecompile.checked,
+                    injectHiddenLink: this.injectHiddenLink.checked,
+                    injectApiKeyCheck: this.injectApiKeyCheck.checked,
+                    varLength: 6
+                };
+                
+                const output = this.obfuscator.obfuscate(input, this.obfuscator.level, features);
+                this.outputArea.value = output;
+                this.updateOutputStats(input, output);
+                this.showToast('Script obfuscated successfully! Hidden link injected.', 'success');
+            } catch(e) {
+                console.error(e);
+                this.showToast('Obfuscation failed: ' + e.message, 'error');
+            }
+            this.showLoading(false);
+        }, 800);
     }
-    
+
     updateStats() {
         const stats = this.obfuscator.calculateStats(this.inputArea.value);
-        this.inputStats.textContent = `${stats.lines} lines | ${stats.chars} characters`;
+        this.lineCount.textContent = stats.lines;
+        this.charCount.textContent = stats.chars;
+        this.sizeKb.textContent = stats.sizeKb;
     }
-    
+
     updateOutputStats(input, output) {
-        const stats = this.obfuscator.calculateStats(this.outputArea.value);
-        this.outputStats.textContent = `${stats.lines} lines | ${stats.chars} characters`;
+        const stats = this.obfuscator.calculateStats(output);
+        this.outputLineCount.textContent = stats.lines;
+        this.outputCharCount.textContent = stats.chars;
         
         if (input && output) {
             const ratio = ((1 - output.length / input.length) * 100).toFixed(1);
-            this.compressionRate.textContent = `Compression: ${ratio}%`;
+            this.compressionRate.textContent = ratio;
         }
     }
-    
-    showNotification(msg, type = 'info') {
-        // Create notification
-        const notif = document.createElement('div');
-        notif.className = `notification ${type}`;
-        notif.textContent = msg;
-        notif.style.cssText = `
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 12px 20px;
-            background: var(--bg-secondary);
-            border: 1px solid ${type === 'success' ? 'var(--success)' : type === 'error' ? 'var(--error)' : 'var(--accent)'};
-            border-radius: 10px;
-            color: var(--text-primary);
-            z-index: 10000;
-            animation: slideIn 0.3s ease;
-        `;
-        
-        document.body.appendChild(notif);
-        
+
+    clearInput() {
+        this.inputArea.value = '';
+        this.updateStats();
+        this.showToast('Input cleared', 'info');
+    }
+
+    clearOutput() {
+        this.outputArea.value = '';
+        this.outputLineCount.textContent = '0';
+        this.outputCharCount.textContent = '0';
+        this.compressionRate.textContent = '0';
+        this.showToast('Output cleared', 'info');
+    }
+
+    loadExample() {
+        this.inputArea.value = `-- Nautica Obfuscator Example
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+
+print("Script loaded successfully!")
+
+-- Auto farm example
+LocalPlayer.CharacterAdded:Connect(function(character)
+    print("Character loaded!")
+    local humanoid = character:FindFirstChild("Humanoid")
+    if humanoid then
+        humanoid.WalkSpeed = 50
+        humanoid.JumpPower = 80
+    end
+end)
+
+-- Render loop
+RunService.RenderStepped:Connect(function(deltaTime)
+    -- Your render logic here
+end)`;
+        this.updateStats();
+        this.showToast('Example loaded!', 'success');
+    }
+
+    uploadFile() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.lua,.txt';
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                this.inputArea.value = e.target.result;
+                this.updateStats();
+                this.showToast(`Loaded: ${file.name}`, 'success');
+            };
+            reader.readAsText(file);
+        };
+        input.click();
+    }
+
+    copyOutput() {
+        this.outputArea.select();
+        document.execCommand('copy');
+        this.showToast('Copied to clipboard!', 'success');
+    }
+
+    downloadOutput() {
+        const output = this.outputArea.value;
+        if (!output.trim()) {
+            this.showToast('Nothing to download!', 'error');
+            return;
+        }
+        const blob = new Blob([output], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `nautica_obfuscated_${Date.now()}.lua`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.showToast('Download started!', 'success');
+    }
+
+    showLoading(show) {
+        if (show) {
+            this.loadingOverlay.classList.add('active');
+        } else {
+            this.loadingOverlay.classList.remove('active');
+        }
+    }
+
+    showToast(message, type = 'info') {
+        this.toastMessage.textContent = message;
+        const icon = this.toast.querySelector('i');
+        if (type === 'success') {
+            icon.className = 'fas fa-check-circle';
+            icon.style.color = '#00ff88';
+        } else if (type === 'error') {
+            icon.className = 'fas fa-exclamation-circle';
+            icon.style.color = '#ff0066';
+        } else {
+            icon.className = 'fas fa-info-circle';
+            icon.style.color = '#00ffff';
+        }
+        this.toast.classList.add('show');
         setTimeout(() => {
-            notif.remove();
+            this.toast.classList.remove('show');
         }, 3000);
     }
-    
-    initTabs() {
-        const menuItems = document.querySelectorAll('.menu-item');
-        const tabs = {
-            obfuscator: document.getElementById('obfuscatorTab'),
-            settings: document.getElementById('settingsTab'),
-            about: document.getElementById('aboutTab')
-        };
-        
-        menuItems.forEach(item => {
-            item.addEventListener('click', () => {
-                const tab = item.dataset.tab;
-                
-                menuItems.forEach(i => i.classList.remove('active'));
-                item.classList.add('active');
-                
-                Object.values(tabs).forEach(t => t.classList.remove('active'));
-                tabs[tab].classList.add('active');
-            });
-        });
-    }
 }
-
-// Add animation styles
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideIn {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
-    }
-`;
-document.head.appendChild(style);
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
