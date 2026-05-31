@@ -3,286 +3,266 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BLACKGPT - Lua Obfuscator | Roblox Script Protector</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Nautica Obfuscator | Roblox Script Protector</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Animated Background -->
+    <div class="particles" id="particles"></div>
+    <div class="grid-bg"></div>
+
     <div class="container">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="logo">
-                <i class="fas fa-skull"></i>
-                <span>BLACKGPT</span>
-            </div>
-            
-            <div class="sidebar-menu">
-                <div class="menu-item active" data-tab="obfuscator">
-                    <i class="fas fa-code"></i>
-                    <span>Obfuscator</span>
-                </div>
-                <div class="menu-item" data-tab="settings">
-                    <i class="fas fa-sliders-h"></i>
-                    <span>Settings</span>
-                </div>
-                <div class="menu-item" data-tab="about">
-                    <i class="fas fa-info-circle"></i>
-                    <span>About</span>
+        <!-- Header -->
+        <div class="header">
+            <div class="logo-wrapper">
+                <div class="logo-glow"></div>
+                <div class="logo">
+                    <i class="fas fa-water"></i>
                 </div>
             </div>
-            
-            <div class="sidebar-footer">
-                <div class="version">v4.2.0</div>
-                <div class="status">
-                    <i class="fas fa-circle"></i>
-                    <span>Active</span>
+            <h1 class="glitch-text" data-text="NAUTICA OBFUSCATOR">NAUTICA OBFUSCATOR</h1>
+            <div class="subtitle">Premium Roblox Script Obfuscator | Hidden Link System | API Key Protected</div>
+            <div class="header-stats">
+                <div class="header-stat">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>4 Level Obfuscation</span>
+                </div>
+                <div class="header-stat">
+                    <i class="fas fa-link"></i>
+                    <span>Hidden Link Generator</span>
+                </div>
+                <div class="header-stat">
+                    <i class="fas fa-key"></i>
+                    <span>API Key System</span>
                 </div>
             </div>
         </div>
-        
+
         <!-- Main Content -->
-        <div class="main">
-            <!-- Header -->
-            <div class="header">
-                <div class="header-title">
-                    <h1>Lua Obfuscator</h1>
-                    <p>Protect your Roblox scripts from decompilers</p>
-                </div>
-                <div class="header-actions">
-                    <button class="btn-icon" id="themeToggle">
-                        <i class="fas fa-moon"></i>
-                    </button>
-                    <button class="btn-icon" id="fullscreenToggle">
-                        <i class="fas fa-expand"></i>
-                    </button>
-                </div>
-            </div>
-            
-            <!-- Obfuscator Tab -->
-            <div class="tab-content active" id="obfuscatorTab">
-                <div class="editor-container">
-                    <!-- Input Area -->
-                    <div class="editor-panel">
-                        <div class="panel-header">
-                            <div class="panel-title">
-                                <i class="fas fa-file-code"></i>
-                                <span>Input Script</span>
-                            </div>
-                            <div class="panel-actions">
-                                <button class="btn-mini" id="clearInput">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                                <button class="btn-mini" id="loadExample">
-                                    <i class="fas fa-file-alt"></i>
-                                </button>
-                                <button class="btn-mini" id="uploadFile">
-                                    <i class="fas fa-upload"></i>
-                                </button>
-                            </div>
+        <div class="content">
+            <!-- Input Panel -->
+            <div class="panel input-panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <div class="title-icon">
+                            <i class="fas fa-code"></i>
                         </div>
-                        <textarea id="inputScript" placeholder="-- Paste your Roblox Lua script here&#10;&#10;local player = game.Players.LocalPlayer&#10;local mouse = player:GetMouse()&#10;&#10;print('Hello World!')"></textarea>
-                        <div class="panel-footer">
-                            <span id="inputStats">0 lines | 0 characters</span>
-                        </div>
+                        <span>Input Script</span>
                     </div>
-                    
-                    <!-- Obfuscation Controls -->
-                    <div class="obfuscation-controls">
-                        <div class="control-group">
-                            <label>Obfuscation Level</label>
-                            <div class="level-buttons">
-                                <button class="level-btn" data-level="light">Light</button>
-                                <button class="level-btn active" data-level="medium">Medium</button>
-                                <button class="level-btn" data-level="heavy">Heavy</button>
-                                <button class="level-btn" data-level="extreme">Extreme</button>
-                            </div>
-                        </div>
-                        
-                        <div class="control-group">
-                            <label>Features</label>
-                            <div class="features-grid">
-                                <label class="checkbox-label">
-                                    <input type="checkbox" id="renameVars" checked>
-                                    <span>Rename Variables</span>
-                                </label>
-                                <label class="checkbox-label">
-                                    <input type="checkbox" id="renameFuncs" checked>
-                                    <span>Rename Functions</span>
-                                </label>
-                                <label class="checkbox-label">
-                                    <input type="checkbox" id="stringEncode" checked>
-                                    <span>Encode Strings</span>
-                                </label>
-                                <label class="checkbox-label">
-                                    <input type="checkbox" id="numberEncode" checked>
-                                    <span>Encode Numbers</span>
-                                </label>
-                                <label class="checkbox-label">
-                                    <input type="checkbox" id="removeComments" checked>
-                                    <span>Remove Comments</span>
-                                </label>
-                                <label class="checkbox-label">
-                                    <input type="checkbox" id="removeWhitespace" checked>
-                                    <span>Remove Whitespace</span>
-                                </label>
-                                <label class="checkbox-label">
-                                    <input type="checkbox" id="addDeadCode" checked>
-                                    <span>Add Dead Code</span>
-                                </label>
-                                <label class="checkbox-label">
-                                    <input type="checkbox" id="controlFlow" checked>
-                                    <span>Control Flow Obfuscation</span>
-                                </label>
-                            </div>
-                        </div>
-                        
-                        <button class="btn-primary" id="obfuscateBtn">
-                            <i class="fas fa-magic"></i>
-                            <span>Obfuscate Script</span>
+                    <div class="panel-actions">
+                        <button class="action-btn" id="clearInputBtn" title="Clear">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                        <button class="action-btn" id="loadExampleBtn" title="Load Example">
+                            <i class="fas fa-file-alt"></i>
+                        </button>
+                        <button class="action-btn" id="uploadFileBtn" title="Upload File">
+                            <i class="fas fa-upload"></i>
                         </button>
                     </div>
-                    
-                    <!-- Output Area -->
-                    <div class="editor-panel">
-                        <div class="panel-header">
-                            <div class="panel-title">
-                                <i class="fas fa-lock"></i>
-                                <span>Obfuscated Output</span>
-                            </div>
-                            <div class="panel-actions">
-                                <button class="btn-mini" id="copyOutput">
-                                    <i class="fas fa-copy"></i>
-                                </button>
-                                <button class="btn-mini" id="downloadOutput">
-                                    <i class="fas fa-download"></i>
-                                </button>
-                                <button class="btn-mini" id="clearOutput">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <textarea id="outputScript" readonly placeholder="Obfuscated script will appear here..."></textarea>
-                        <div class="panel-footer">
-                            <span id="outputStats">0 lines | 0 characters</span>
-                            <span id="compressionRate">Compression: 0%</span>
-                        </div>
+                </div>
+                <textarea id="inputScript" placeholder="-- Paste your Roblox script here...
+-- 
+-- Example:
+-- local player = game.Players.LocalPlayer
+-- local mouse = player:GetMouse()
+-- 
+-- print('Hello World!')"></textarea>
+                <div class="panel-stats">
+                    <div class="stat-item">
+                        <i class="fas fa-code"></i>
+                        <span id="lineCount">0</span>
+                        <small>lines</small>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-font"></i>
+                        <span id="charCount">0</span>
+                        <small>chars</small>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-database"></i>
+                        <span id="sizeKb">0</span>
+                        <small>KB</small>
                     </div>
                 </div>
             </div>
-            
-            <!-- Settings Tab -->
-            <div class="tab-content" id="settingsTab">
-                <div class="settings-container">
-                    <div class="settings-section">
-                        <h3><i class="fas fa-palette"></i> Appearance</h3>
-                        <div class="settings-row">
-                            <label>Theme</label>
-                            <select id="themeSelect">
-                                <option value="dark">Dark (Default)</option>
-                                <option value="darker">Darker</option>
-                                <option value="midnight">Midnight</option>
-                                <option value="matrix">Matrix</option>
-                            </select>
+
+            <!-- Controls Panel -->
+            <div class="panel controls-panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <div class="title-icon">
+                            <i class="fas fa-sliders-h"></i>
                         </div>
-                        <div class="settings-row">
-                            <label>Font Size</label>
-                            <input type="range" id="fontSize" min="12" max="20" value="14">
-                            <span id="fontSizeValue">14px</span>
-                        </div>
-                        <div class="settings-row">
-                            <label>Editor Theme</label>
-                            <select id="editorTheme">
-                                <option value="monokai">Monokai</option>
-                                <option value="dracula">Dracula</option>
-                                <option value="nord">Nord</option>
-                                <option value="github">GitHub Dark</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="settings-section">
-                        <h3><i class="fas fa-cog"></i> Obfuscation Settings</h3>
-                        <div class="settings-row">
-                            <label>Variable Name Length</label>
-                            <input type="range" id="varLength" min="1" max="10" value="4">
-                            <span id="varLengthValue">4 chars</span>
-                        </div>
-                        <div class="settings-row">
-                            <label>Add Anti-Decompile</label>
-                            <input type="checkbox" id="antiDecompile">
-                            <span>Add anti-decompilation headers</span>
-                        </div>
-                        <div class="settings-row">
-                            <label>Add Watermark</label>
-                            <input type="checkbox" id="watermark">
-                            <span>Add BLACKGPT watermark</span>
-                        </div>
-                    </div>
-                    
-                    <div class="settings-section">
-                        <h3><i class="fas fa-database"></i> Presets</h3>
-                        <div class="preset-buttons">
-                            <button class="preset-btn" data-preset="speed">Speed Optimized</button>
-                            <button class="preset-btn" data-preset="security">Max Security</button>
-                            <button class="preset-btn" data-preset="size">Minimize Size</button>
-                            <button class="preset-btn" data-preset="balance">Balanced</button>
-                        </div>
+                        <span>Obfuscation Settings</span>
                     </div>
                 </div>
+                
+                <div class="controls-content">
+                    <!-- Level Selection -->
+                    <div class="control-group">
+                        <label>Obfuscation Level</label>
+                        <div class="level-buttons">
+                            <button class="level-btn" data-level="light">Light</button>
+                            <button class="level-btn active" data-level="medium">Medium</button>
+                            <button class="level-btn" data-level="heavy">Heavy</button>
+                            <button class="level-btn" data-level="extreme">Extreme</button>
+                        </div>
+                    </div>
+
+                    <!-- Features -->
+                    <div class="control-group">
+                        <label>Features</label>
+                        <div class="features-grid">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="renameVars" checked>
+                                <span>Rename Variables</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="encodeStrings" checked>
+                                <span>Encode Strings</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="encodeNumbers" checked>
+                                <span>Encode Numbers</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="addDeadCode" checked>
+                                <span>Add Dead Code</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="removeComments" checked>
+                                <span>Remove Comments</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="removeWhitespace" checked>
+                                <span>Remove Whitespace</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="controlFlow" checked>
+                                <span>Control Flow</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="antiDecompile" checked>
+                                <span>Anti-Decompile</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Hidden Link Settings -->
+                    <div class="control-group">
+                        <label>Hidden Link Configuration</label>
+                        <div class="hidden-link-config">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="injectHiddenLink" checked>
+                                <span>Inject Hidden Nautica Link</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="injectApiKeyCheck" checked>
+                                <span>Inject API Key Verification</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button class="obfuscate-btn" id="obfuscateBtn">
+                        <i class="fas fa-magic"></i>
+                        <span>Obfuscate Script</span>
+                        <div class="btn-glow"></div>
+                    </button>
+                </div>
             </div>
-            
-            <!-- About Tab -->
-            <div class="tab-content" id="aboutTab">
-                <div class="about-container">
-                    <div class="about-header">
-                        <i class="fas fa-skull"></i>
-                        <h2>BLACKGPT Lua Obfuscator</h2>
-                        <p>Next-generation script protection for Roblox developers</p>
+
+            <!-- Output Panel -->
+            <div class="panel output-panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <div class="title-icon">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                        <span>Obfuscated Output</span>
                     </div>
-                    
-                    <div class="features-grid-about">
-                        <div class="feature-card">
-                            <i class="fas fa-shield-alt"></i>
-                            <h4>Military Grade Protection</h4>
-                            <p>Advanced obfuscation techniques that break decompilers</p>
-                        </div>
-                        <div class="feature-card">
-                            <i class="fas fa-tachometer-alt"></i>
-                            <h4>Zero Performance Loss</h4>
-                            <p>Obfuscated scripts run at native speed</p>
-                        </div>
-                        <div class="feature-card">
-                            <i class="fas fa-cloud-upload-alt"></i>
-                            <h4>100% Online</h4>
-                            <p>No installation required, works in browser</p>
-                        </div>
-                        <div class="feature-card">
-                            <i class="fas fa-code-branch"></i>
-                            <h4>Multiple Algorithms</h4>
-                            <p>4 different obfuscation levels to choose from</p>
-                        </div>
+                    <div class="panel-actions">
+                        <button class="action-btn" id="copyOutputBtn" title="Copy">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                        <button class="action-btn" id="downloadOutputBtn" title="Download">
+                            <i class="fas fa-download"></i>
+                        </button>
+                        <button class="action-btn" id="clearOutputBtn" title="Clear">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
-                    
-                    <div class="stats-box">
-                        <div class="stat">
-                            <span class="stat-number">50K+</span>
-                            <span class="stat-label">Scripts Protected</span>
-                        </div>
-                        <div class="stat">
-                            <span class="stat-number">99.9%</span>
-                            <span class="stat-label">Uptime</span>
-                        </div>
-                        <div class="stat">
-                            <span class="stat-number">24/7</span>
-                            <span class="stat-label">Support</span>
-                        </div>
+                </div>
+                <textarea id="outputScript" readonly placeholder="Obfuscated script will appear here..."></textarea>
+                <div class="panel-stats">
+                    <div class="stat-item">
+                        <i class="fas fa-code"></i>
+                        <span id="outputLineCount">0</span>
+                        <small>lines</small>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-font"></i>
+                        <span id="outputCharCount">0</span>
+                        <small>chars</small>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-compress"></i>
+                        <span id="compressionRate">0</span>
+                        <small>% compression</small>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
+
+    <!-- API Key Modal -->
+    <div class="modal" id="apiModal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-icon">
+                <i class="fas fa-key"></i>
+            </div>
+            <h2>Enter Nautica API Key</h2>
+            <p>Please enter your API key to continue obfuscation</p>
+            <div class="modal-input-wrapper">
+                <i class="fas fa-lock"></i>
+                <input type="text" id="apiKeyInput" placeholder="NAUTICA-XXXX-XXXX-XXXX">
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn primary" id="verifyApiBtn">
+                    <i class="fas fa-check"></i>
+                    Verify & Continue
+                </button>
+                <button class="modal-btn secondary" id="demoKeyBtn">
+                    <i class="fas fa-gift"></i>
+                    Get Demo Key
+                </button>
+            </div>
+            <div class="modal-footer">
+                <i class="fas fa-shield-alt"></i>
+                <span>Your key is encrypted and secure</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner">
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring"></div>
+            <div class="loading-text">OBFUSCATING...</div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMessage">Success!</span>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
